@@ -253,6 +253,12 @@ if (product.quality !== 'stable') {
 		'description': 'Indicates the amount to boost the "literal" component of the query. Temporary.',
 		'default': 10
 	};
+
+	workbenchProperties['workbench.settings.enableFuzzySearchFeedback'] = {
+		'type': 'boolean',
+		'description': 'Enable the "Provide Feedback" button on the fuzzy search page.',
+		'default': false
+	};
 }
 
 if (isMacintosh) {
