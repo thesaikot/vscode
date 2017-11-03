@@ -113,7 +113,7 @@ export class DefaultSettingsHeaderWidget extends SettingsHeaderWidget {
 		super.create();
 
 		this.linkElement = DOM.append(this.titleContainer, DOM.$('a.settings-header-fuzzy-link'));
-		this.linkElement.textContent = localize('defaultSettingsFuzzyPrompt', "Try fuzzy search!");
+		this.linkElement.textContent = localize('defaultSettingsFuzzyPrompt', "Try Bing search!");
 
 		this.onclick(this.linkElement, e => this._onClick.fire());
 		this.toggleMessage(true);
@@ -471,7 +471,7 @@ export class SearchWidget extends Widget {
 				this.inputBox.focus();
 				this._onDidChange.fire();
 			},
-			title: localize('enableFuzzySearch', 'Enable experimental fuzzy search')
+			title: localize('enableFuzzySearch', 'Enable experimental Bing search')
 		}));
 		DOM.append(this.controlsDiv, this.fuzzyToggle.domNode);
 		this._register(attachCheckboxStyler(this.fuzzyToggle, this.themeService));
