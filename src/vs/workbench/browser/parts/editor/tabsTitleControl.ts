@@ -59,14 +59,11 @@ export class TabsTitleControl extends TitleControl {
 	private tabsContainer: HTMLElement;
 	private editorToolbarContainer: HTMLElement;
 	private activeTab: HTMLElement;
-	private activeTabIndex: number;
 	private editorLabels: ResourceLabel[];
 	private scrollbar: ScrollableElement;
 	private tabDisposeables: IDisposable[];
 	private blockRevealActiveTab: boolean;
 	private dimension: Dimension;
-	private tabWidths: number[];
-	private totalTabsWidth: number;
 	private editorToolbarWidth: number;
 
 	constructor(
@@ -90,8 +87,6 @@ export class TabsTitleControl extends TitleControl {
 
 		this.tabDisposeables = [];
 		this.editorLabels = [];
-		this.tabWidths = [];
-		this.totalTabsWidth = 0;
 		this.editorToolbarWidth = 0;
 	}
 
@@ -289,8 +284,6 @@ export class TabsTitleControl extends TitleControl {
 		const labels = this.getTabLabels(editorsOfGroup);
 
 		// Tab label and styles
-		this.tabWidths = [];
-		this.totalTabsWidth = 0;
 		editorsOfGroup.forEach((editor, index) => {
 			const tabContainer = this.tabsContainer.children[index] as HTMLElement;
 			const isPinned = group.isPinned(index);
@@ -337,7 +330,6 @@ export class TabsTitleControl extends TitleControl {
 				}
 
 				this.activeTab = tabContainer;
-				this.activeTabIndex = index;
 			} else {
 				DOM.removeClass(tabContainer, 'active');
 				tabContainer.setAttribute('aria-selected', 'false');
@@ -352,11 +344,6 @@ export class TabsTitleControl extends TitleControl {
 			} else {
 				DOM.removeClass(tabContainer, 'dirty');
 			}
-
-			// Update cached dimensions
-			const tabWidth = this.getElementWidth(tabContainer);
-			this.tabWidths.push(tabWidth);
-			this.totalTabsWidth += tabWidth;
 		});
 
 		// Update Editor Actions Toolbar
@@ -494,9 +481,6 @@ export class TabsTitleControl extends TitleControl {
 		this.editorLabels = [];
 
 		DOM.addClass(this.titleContainer, 'empty');
-
-		this.tabWidths = [];
-		this.totalTabsWidth = 0;
 	}
 
 	private handleTabs(tabsNeeded: number): void {
@@ -581,14 +565,35 @@ export class TabsTitleControl extends TitleControl {
 			return;
 		}
 
+		let totalTabsWidth = 0;
+		let tabWidths: number[] = [];
+		let activeTabIndex: number;
+
+		const editorsOfGroup = this.context.getEditors();
+		editorsOfGroup.forEach((editor, index) => {
+			const tabContainer = this.tabsContainer.children[index] as HTMLElement;
+
+			if (tabContainer === this.activeTab) {
+				activeTabIndex = index;
+			}
+
+			const tabWidth = this.getElementWidth(tabContainer);
+			tabWidths.push(tabWidth);
+			totalTabsWidth += tabWidth;
+		});
+
 		this.dimension = dimension;
 
 		const visibleContainerWidth = this.dimension.width - this.editorToolbarWidth;
 
+		if (this.context.id === 0) {
+			console.log(this.dimension.width, this.editorToolbarWidth);
+		}
+
 		// Update scrollbar
 		this.scrollbar.setScrollDimensions({
 			width: visibleContainerWidth,
-			scrollWidth: this.totalTabsWidth
+			scrollWidth: totalTabsWidth
 		});
 
 		// Return now if we are blocked to reveal the active tab and clear flag
@@ -599,13 +604,19 @@ export class TabsTitleControl extends TitleControl {
 
 		// Reveal the active one
 		const containerScrollPosX = this.scrollbar.getScrollPosition().scrollLeft;
-		const activeTabPosX = this.tabWidths.slice(0, this.activeTabIndex).reduce((a, b) => a + b, 0);
-		const activeTabWidth = this.tabWidths[this.activeTabIndex];
+		const activeTabPosX = tabWidths.slice(0, activeTabIndex).reduce((a, b) => a + b, 0);
+		const activeTabWidth = tabWidths[activeTabIndex];
 		const activeTabFits = activeTabWidth <= visibleContainerWidth;
+
+		if (this.context.id === 0) {
+			console.log('containerScrollPosX + visibleContainerWidth < activeTabPosX + activeTabWidth');
+			console.log(containerScrollPosX, visibleContainerWidth, activeTabPosX, activeTabWidth);
+		}
 
 		// Tab is overflowing to the right: Scroll minimally until the element is fully visible to the right
 		// Note: only try to do this if we actually have enough width to give to show the tab fully!
 		if (activeTabFits && containerScrollPosX + visibleContainerWidth < activeTabPosX + activeTabWidth) {
+			console.log(1)
 			this.scrollbar.setScrollPosition({
 				scrollLeft: containerScrollPosX + ((activeTabPosX + activeTabWidth) /* right corner of tab */ - (containerScrollPosX + visibleContainerWidth) /* right corner of view port */)
 			});
@@ -613,6 +624,7 @@ export class TabsTitleControl extends TitleControl {
 
 		// Tab is overlflowng to the left or does not fit: Scroll it into view to the left
 		else if (containerScrollPosX > activeTabPosX || !activeTabFits) {
+			console.log(2)
 			this.scrollbar.setScrollPosition({
 				scrollLeft: activeTabPosX
 			});
