@@ -44,7 +44,7 @@ import { TAB_INACTIVE_BACKGROUND, TAB_ACTIVE_BACKGROUND, TAB_ACTIVE_FOREGROUND, 
 import { activeContrastBorder, contrastBorder } from 'vs/platform/theme/common/colorRegistry';
 import { IFileService } from 'vs/platform/files/common/files';
 import { IWorkspacesService } from 'vs/platform/workspaces/common/workspaces';
-import { Dimension, Builder } from 'vs/base/browser/builder';
+import { Dimension } from 'vs/base/browser/builder';
 
 interface IEditorInputLabel {
 	name: string;
@@ -57,6 +57,7 @@ type AugmentedLabel = IEditorInputLabel & { editor: IEditorInput };
 export class TabsTitleControl extends TitleControl {
 	private titleContainer: HTMLElement;
 	private tabsContainer: HTMLElement;
+	private editorToolbarContainer: HTMLElement;
 	private activeTab: HTMLElement;
 	private activeTabIndex: number;
 	private editorLabels: ResourceLabel[];
@@ -232,13 +233,13 @@ export class TabsTitleControl extends TitleControl {
 			}
 		}));
 
-		// Editor Actions Container
-		const editorActionsContainer = document.createElement('div');
-		DOM.addClass(editorActionsContainer, 'editor-actions');
-		this.titleContainer.appendChild(editorActionsContainer);
+		// Editor Toolbar Container
+		this.editorToolbarContainer = document.createElement('div');
+		DOM.addClass(this.editorToolbarContainer, 'editor-actions');
+		this.titleContainer.appendChild(this.editorToolbarContainer);
 
 		// Editor Actions Toolbar
-		this.createEditorActionsToolBar(editorActionsContainer);
+		this.createEditorActionsToolBar(this.editorToolbarContainer);
 	}
 
 	private updateDropFeedback(element: HTMLElement, isDND: boolean, index?: number): void {
@@ -559,20 +560,16 @@ export class TabsTitleControl extends TitleControl {
 	public updateEditorActionsToolbar(): void {
 		super.updateEditorActionsToolbar();
 
-		this.editorToolbarWidth = this.getElementWidth(this.editorActionsToolbar.getContainer());
+		this.editorToolbarWidth = this.getElementWidth(this.editorToolbarContainer);
 	}
 
 	protected clearEditorActionsToolbar(): void {
 		super.clearEditorActionsToolbar();
 
-		this.editorToolbarWidth = this.getElementWidth(this.editorActionsToolbar.getContainer());
+		this.editorToolbarWidth = this.getElementWidth(this.editorToolbarContainer);
 	}
 
-	private getElementWidth(element: HTMLElement | Builder): number {
-		if (element instanceof Builder) {
-			element = element.getHTMLElement();
-		}
-
+	private getElementWidth(element: HTMLElement): number {
 		// We are using getBoundingClientRect() over offsetWidth for a reason: only the former will return subpixel sizes
 		// whereas the other (offsetWidth) will round the value to the nearest number. For our layout code we really need
 		// the sizes with their fractions to not cause rounding issues.
