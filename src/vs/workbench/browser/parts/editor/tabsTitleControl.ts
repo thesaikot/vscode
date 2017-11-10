@@ -587,11 +587,11 @@ export class TabsTitleControl extends TitleControl {
 		this.dimension = dimension;
 
 		const visibleContainerWidth = this.dimension.width - this.editorToolbarWidth;
-		const totalContainerWidth = this.totalTabsWidth;
+
 		// Update scrollbar
 		this.scrollbar.setScrollDimensions({
 			width: visibleContainerWidth,
-			scrollWidth: totalContainerWidth
+			scrollWidth: this.totalTabsWidth
 		});
 
 		// Return now if we are blocked to reveal the active tab and clear flag
